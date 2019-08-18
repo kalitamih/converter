@@ -1,4 +1,4 @@
-import React, { FC, Fragment } from 'react'
+import React, { FC, Fragment, useState } from 'react'
 import styled, { createGlobalStyle } from 'styled-components'
 import arrow from './arrow.png'
 import currency from './currency.jpg'
@@ -48,13 +48,14 @@ const Button = styled.button`
 `
 const Input = styled.input`
   margin: 10px;
-  padding-left: 10px;
+  padding-right: 10px;
   width: 200px;
   height: 35px;
-  font-size: 20px;
+  font-size: 14px;
   border: 2px solid #cccccc;
   border-radius: 10px;
   background-color: #ffffff;
+  text-align: right;
   &:hover,
   &:focus {
     border: 2px solid #808080;
@@ -88,6 +89,36 @@ const WrapperDown = styled.div`
 `
 
 const App: FC = () => {
+  const [sellInput, setSellInput] = useState('')
+  const [buyInput, setBuyInput] = useState('')
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const regexp = /^\d+[.]?\d*$|^$/g
+    const { value, name } = event.target
+    if (!regexp.test(value)) {
+      return
+    }
+    if (value.length > 20) {
+      return
+    }
+    if (name === 'sell') {
+      if (/^0\d$/.test(value)) {
+        setSellInput(value[1])
+        return
+      }
+      setSellInput(value)
+      return
+    }
+    if (name === 'buy') {
+      if (/^0\d$/.test(value)) {
+        setBuyInput(value[1])
+        return
+      }
+      setBuyInput(value)
+      return
+    }
+  }
+
   return (
     <Fragment>
       <GlobalStyle />
@@ -96,10 +127,20 @@ const App: FC = () => {
         <Title>Конвертер валют</Title>
       </WrapperUP>
       <WrapperDown>
-        <Input />
+        <Input
+          name="sell"
+          placeholder="Продажа банку"
+          value={sellInput}
+          onChange={handleChange}
+        />
         <Button>USD</Button>
         <Img content={arrow} />
-        <Input />
+        <Input
+          name="buy"
+          value={buyInput}
+          placeholder="Покупка у банка"
+          onChange={handleChange}
+        />
         <Button>BYN</Button>
       </WrapperDown>
     </Fragment>
