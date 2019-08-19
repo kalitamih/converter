@@ -1,15 +1,11 @@
 import { actionCurrency } from '../actions/enum'
-
-export enum Currency {
-  BYN = 'BYN',
-  USD = 'USD',
-}
+import { Currency, CurrencyState } from './interfaces'
 
 interface Action {
   type: actionCurrency
 }
 
-const initialState = {
+const initialState: CurrencyState = {
   mainCurrency: Currency.USD,
 }
 

@@ -1,8 +1,8 @@
-import { combineReducers, Reducer } from 'redux'
+import { combineReducers } from 'redux'
 import { currencyReducer } from './currency'
 
-const rootReducer = combineReducers({
+export const rootReducer = combineReducers({
   currency: currencyReducer,
 })
 
-export default rootReducer
+export type AppState = ReturnType<typeof rootReducer>

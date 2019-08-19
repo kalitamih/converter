@@ -1,10 +1,23 @@
 import React, { FC, Fragment, useState } from 'react'
+import { connect } from 'react-redux'
+import { ThunkDispatch } from 'redux-thunk'
 import styled, { createGlobalStyle } from 'styled-components'
+import { actionCurrency } from './actions/enum'
+import setBYN from './actions/setBYN'
+import setUSD from './actions/setUSD'
 import arrow from './arrow.png'
 import currency from './currency.jpg'
+import { AppState } from './reducers'
+import { Currency } from './reducers/interfaces'
 
 interface ImgProps {
   content: string
+}
+
+interface AppType {
+  mainCurrency: Currency
+  setMainBYN: () => { type: actionCurrency }
+  setMainUSD: () => { type: actionCurrency }
 }
 
 const GlobalStyle = createGlobalStyle`
@@ -44,7 +57,6 @@ const Arrow = styled.button`
     transform: scale(1.1, 1.1);
   }
 `
-
 const Button = styled.div`
   background-color: #4caf50;
   border: solid 2px #4caf50;
@@ -78,6 +90,7 @@ const Img = styled.img`
   height: 50px;   
   margin: 0;  
   padding: 0;
+  pointer-events: none;
 }
 `
 const Title = styled.h3`
@@ -99,8 +112,7 @@ const WrapperDown = styled.div`
     flex-basis: 100%;
   }
 `
-
-const App: FC = () => {
+const App: FC<AppType> = ({ mainCurrency, setMainBYN, setMainUSD }) => {
   const [sellInput, setSellInput] = useState('')
   const [buyInput, setBuyInput] = useState('')
 
@@ -131,6 +143,17 @@ const App: FC = () => {
     }
   }
 
+  const handleClick = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ): void => {
+    if (mainCurrency === Currency.USD) {
+      setMainBYN()
+      return
+    }
+    setMainUSD()
+    return
+  }
+
   return (
     <Fragment>
       <GlobalStyle />
@@ -145,8 +168,8 @@ const App: FC = () => {
           value={sellInput}
           onChange={handleChange}
         />
-        <Button>USD</Button>
-        <Arrow>
+        <Button>{mainCurrency}</Button>
+        <Arrow onClick={handleClick}>
           <Img content={arrow} />
         </Arrow>
         <Input
@@ -155,10 +178,22 @@ const App: FC = () => {
           placeholder="Покупка у банка"
           onChange={handleChange}
         />
-        <Button>BYN</Button>
+        <Button>{mainCurrency === Currency.USD ? 'BYN' : 'USD'}</Button>
       </WrapperDown>
     </Fragment>
   )
 }
 
-export default App
+const mapStateToProps = (state: AppState) => ({
+  mainCurrency: state.currency.mainCurrency,
+})
+
+const mapDispatchToProps = (dispatch: ThunkDispatch<{}, {}, any>) => ({
+  setMainBYN: () => dispatch(setBYN()),
+  setMainUSD: () => dispatch(setUSD()),
+})
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App)
