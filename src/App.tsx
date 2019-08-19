@@ -25,7 +25,27 @@ const GlobalStyle = createGlobalStyle`
     padding: 20px;
   }
 `
-const Button = styled.button`
+const Arrow = styled.button`
+  background-color: transparent;
+  border: solid 0px transparent;
+  border-radius: 50%;
+  padding: 1px;
+  display: block;
+  margin-top: 70px;
+  width: 50px;
+  height: 50px;
+  cursor: default;
+  outline: none;
+  outline-offset: 0px;
+  &:focus {
+    box-shadow: 0 0 3pt 2px #4d90fe;
+  }
+  &:active {
+    transform: scale(1.1, 1.1);
+  }
+`
+
+const Button = styled.div`
   background-color: #4caf50;
   border: solid 2px #4caf50;
   border-radius: 10px;
@@ -35,16 +55,7 @@ const Button = styled.button`
   margin-right: 20px;
   padding: 5px 16px;
   display: inline-block;
-  cursor: pointer;
-  &:hover,
-  &focus {
-    background-color: #ffffff;
-    color: #4caf50;
-  }
-  &:active {
-    background-color: #4caf50;
-    color: #ffffff;
-  }
+  cursor: default;
 `
 const Input = styled.input`
   margin: 10px;
@@ -65,7 +76,8 @@ const Img = styled.img`
   content: url(${(p: ImgProps) => p.content}); 
   width: 50px;
   height: 50px;   
-  margin-top: 
+  margin: 0;  
+  padding: 0;
 }
 `
 const Title = styled.h3`
@@ -134,7 +146,9 @@ const App: FC = () => {
           onChange={handleChange}
         />
         <Button>USD</Button>
-        <Img content={arrow} />
+        <Arrow>
+          <Img content={arrow} />
+        </Arrow>
         <Input
           name="buy"
           value={buyInput}
