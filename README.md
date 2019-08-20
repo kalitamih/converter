@@ -1,2 +1,0 @@
-# converter
-ts+react+redux
