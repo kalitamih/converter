@@ -4,9 +4,10 @@ import { Provider } from 'react-redux'
 import App from './App'
 import { store } from './store'
 
-ReactDOM.render(
+const MyAppWithStore = () => (
   <Provider store={store}>
     <App />
-  </Provider>,
-  document.querySelector('#root')
+  </Provider>
 )
+
+ReactDOM.render(<MyAppWithStore />, document.querySelector('#root'))
