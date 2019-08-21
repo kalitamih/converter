@@ -1,19 +1,19 @@
 import { actionTypeRate } from '../actions/enum'
 
-const initialState = {
-  USD_in: '',
-  USD_out: '',
-  error: '',
-  loading: true,
-  time: '',
-}
-
 interface ActionRate {
   type: actionTypeRate
   USD_in: string
   USD_out: string
   time: string
   error: string
+}
+
+const initialState = {
+  USD_in: '',
+  USD_out: '',
+  error: '',
+  loading: true,
+  time: '',
 }
 
 export const rateReducer = (state = initialState, action: ActionRate) => {

@@ -16,13 +16,12 @@
     "typescript": "3.5.3"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_HOST_ENV=true react-scripts start",
     "build": "react-scripts build",
     "lint": "tsc --noEmit && tslint -c tslint.json 'src/**/*.{ts,tsx}'",
     "test": "react-scripts test  --env=jsdom --watchAll=false",
     "eject": "react-scripts eject"
-  },
-  "proxy": "http://localhost:5000/",
+  }, 
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",

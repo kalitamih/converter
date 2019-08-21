@@ -11,10 +11,6 @@ import currency from './currency.jpg'
 import { AppState } from './reducers'
 import { Currency } from './reducers/interfaces'
 
-interface ImgProps {
-  content: string
-}
-
 interface AppType {
   USD_in: string
   USD_out: string
@@ -27,7 +23,17 @@ interface AppType {
   setMainUSD: () => { type: actionCurrency }
 }
 
-const MS_IN_HOUR = 60 * 60 * 100
+enum Placeholder {
+  BUY = 'Покупка у банка',
+  SELL = 'Продажа банку',
+}
+
+enum Field {
+  BUY = 'buy',
+  SELL = 'sell',
+}
+
+const MS_IN_3_HOURS = 3 * 60 * 60 * 100
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -58,9 +64,11 @@ const Arrow = styled.button`
   height: 50px;
   cursor: default;
   outline: none;
-  outline-offset: 0px;
+  &::-moz-focus-inner {
+    border: 0;
+  }
   &:focus {
-    box-shadow: 0 0 3pt 2px #4d90fe;
+    box-shadow: 0 0 3pt 2px #808080;
   }
   &:active {
     transform: scale(1.1, 1.1);
@@ -73,9 +81,10 @@ const Button = styled.div`
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
-  margin-right: 20px;
+  width: 23px;
+  margin-right: 30px;
   padding: 5px 16px;
-  display: inline-block;
+  display: block;
   cursor: default;
 `
 const Input = styled.input`
@@ -88,29 +97,30 @@ const Input = styled.input`
   border-radius: 10px;
   background-color: #ffffff;
   text-align: right;
+  outline: none;
+  &::-moz-focus-inner {
+    border: 0;
+  }
   &:hover,
   &:focus {
     border: 2px solid #808080;
   }
 `
-const Img = styled.img`  
-  content: url(${(p: ImgProps) => p.content}); 
+const Img = styled.img`
+  display: block;
   width: 50px;
-  height: 50px;   
-  margin: 0;  
+  height: 50px;
+  margin: 0;
   padding: 0;
   pointer-events: none;
-}
 `
 const Title = styled.h3`
-  display: inline-block;  
+  display: inline-block;
   margin: 10px;
-}
 `
 const WrapperUP = styled.div`
-  display: flex;  
+  display: flex;
   align-items: center;
-}
 `
 const WrapperDown = styled.div`
   display: flex;
@@ -142,24 +152,31 @@ const App: FC<AppType> = ({
 
   useEffect(() => {
     exchangeRate()
-  }, [])
+  }, [exchangeRate])
+
+  const getNewExchangeRate = () => {
+    if (new Date().getTime() - parseFloat(time) > MS_IN_3_HOURS) {
+      exchangeRate()
+    }
+    return
+  }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     let result
-    const regexp = /^\d+[.]?\d*$|^$/g
     const { value, name } = event.target
+    getNewExchangeRate()
     if (!value.length) {
       setSellInput('')
       setBuyInput('')
       return
     }
-    if (!regexp.test(value)) {
+    if (!/^\d+[.]?\d{0,4}$|^$/g.test(value)) {
       return
     }
-    if (value.length > 20) {
+    if (value.length > 16) {
       return
     }
-    if (name === 'sell') {
+    if (name === Field.SELL) {
       if (/^0\d$/.test(value)) {
         setSellInput(value[1])
         result =
@@ -177,21 +194,21 @@ const App: FC<AppType> = ({
       setBuyInput((Math.round(result * 10000) / 10000).toString())
       return
     }
-    if (name === 'buy') {
+    if (name === Field.BUY) {
       if (/^0\d$/.test(value)) {
         setBuyInput(value[1])
         result =
-          mainCurrency === Currency.USD
-            ? parseFloat(value[1]) / parseFloat(USD_in)
-            : parseFloat(value[1]) * parseFloat(USD_out)
+          mainCurrency === Currency.BYN
+            ? parseFloat(value[1]) * parseFloat(USD_out)
+            : parseFloat(value[1]) / parseFloat(USD_in)
         setSellInput((Math.round(result * 10000) / 10000).toString())
         return
       }
       setBuyInput(value)
       result =
-        mainCurrency === Currency.USD
-          ? parseFloat(value) / parseFloat(USD_in)
-          : parseFloat(value) * parseFloat(USD_out)
+        mainCurrency === Currency.BYN
+          ? parseFloat(value) * parseFloat(USD_out)
+          : parseFloat(value) / parseFloat(USD_in)
       setSellInput((Math.round(result * 10000) / 10000).toString())
       return
     }
@@ -201,6 +218,7 @@ const App: FC<AppType> = ({
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ): void => {
     let result
+    getNewExchangeRate()
     if (mainCurrency === Currency.USD) {
       setMainBYN()
       if (!sellInput) {
@@ -223,29 +241,31 @@ const App: FC<AppType> = ({
     <Fragment>
       <GlobalStyle />
       <WrapperUP>
-        <Img content={currency} />
+        <Img src={currency} />
         <Title>Конвертер валют</Title>
       </WrapperUP>
       <WrapperDown>
         <Input
-          name="sell"
-          placeholder="Продажа банку"
+          name={Field.SELL}
+          placeholder={Placeholder.SELL}
           value={sellInput}
           onChange={handleChange}
           disabled={loading}
         />
         <Button>{mainCurrency}</Button>
         <Arrow onClick={handleClick}>
-          <Img content={arrow} />
+          <Img src={arrow} />
         </Arrow>
         <Input
-          name="buy"
+          name={Field.BUY}
           value={buyInput}
-          placeholder="Покупка у банка"
+          placeholder={Placeholder.BUY}
           onChange={handleChange}
           disabled={loading}
         />
-        <Button>{mainCurrency === Currency.USD ? 'BYN' : 'USD'}</Button>
+        <Button>
+          {mainCurrency === Currency.USD ? Currency.BYN : Currency.USD}
+        </Button>
       </WrapperDown>
       {error.length !== 0 && USD_out.length !== 0 && USD_in.length !== 0 && (
         <Warning>Данные устарели</Warning>
