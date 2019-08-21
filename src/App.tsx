@@ -165,7 +165,7 @@ const App: FC<AppType> = ({
     let result
     const { value, name } = event.target
     getNewExchangeRate()
-    if (!value.length) {
+    if (!value.length || !USD_in || !USD_out) {
       setSellInput('')
       setBuyInput('')
       return
@@ -250,7 +250,7 @@ const App: FC<AppType> = ({
           placeholder={Placeholder.SELL}
           value={sellInput}
           onChange={handleChange}
-          disabled={loading}
+          disabled={loading || error.length !== 0}
         />
         <Button>{mainCurrency}</Button>
         <Arrow onClick={handleClick}>
@@ -261,7 +261,7 @@ const App: FC<AppType> = ({
           value={buyInput}
           placeholder={Placeholder.BUY}
           onChange={handleChange}
-          disabled={loading}
+          disabled={loading || error.length !== 0}
         />
         <Button>
           {mainCurrency === Currency.USD ? Currency.BYN : Currency.USD}

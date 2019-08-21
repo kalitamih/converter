@@ -6,11 +6,7 @@ const LINK_BANK = 'https://belarusbank.by/api/kursExchange'
 
 const getExchangeRate = () => (dispatch: ThunkDispatch<{}, {}, any>) => {
   dispatch({ type: actionTypeRate.LOADING })
-  fetch(
-    process.env.REACT_APP_HOST_ENV
-      ? `${LINK_HEROKU_PROXY}${LINK_BANK}`
-      : `${LINK_BANK}`
-  )
+  fetch(`${LINK_HEROKU_PROXY}${LINK_BANK}`)
     .then(data => data.json())
     .then(data => data[0])
     .then(data => {

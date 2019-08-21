@@ -2,6 +2,7 @@
   "name": "converter",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://kalitamih.github.io/converter",
   "dependencies": {
     "@types/jest": "24.0.17",
     "@types/node": "12.7.2",
@@ -16,12 +17,14 @@
     "typescript": "3.5.3"
   },
   "scripts": {
-    "start": "REACT_APP_HOST_ENV=true react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "lint": "tsc --noEmit && tslint -c tslint.json 'src/**/*.{ts,tsx}'",
     "test": "react-scripts test  --env=jsdom --watchAll=false",
-    "eject": "react-scripts eject"
-  }, 
+    "eject": "react-scripts eject",
+    "predeploy": "yarn run build",
+    "deploy": "gh-pages -d build"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
@@ -57,6 +60,7 @@
     "@types/redux": "^3.6.0",
     "@types/redux-thunk": "^2.1.0",
     "@types/styled-components": "^4.1.18",
+    "gh-pages": "^2.1.1",
     "husky": "^3.0.4",
     "lint-staged": "^9.2.3",
     "prettier": "^1.18.2",
