@@ -48,9 +48,9 @@ const GlobalStyle = createGlobalStyle`
   }
   #root {
     border: 2px solid black;
-    width: 400px;
-    height: 400px;
-    padding: 20px;
+    width: 270px;
+    height: 270px;
+    padding: 15px;
   }
 `
 const Arrow = styled.button`
@@ -60,8 +60,8 @@ const Arrow = styled.button`
   padding: 1px;
   display: block;
   margin-top: 70px;
-  width: 50px;
-  height: 50px;
+  width: 35px;
+  height: 35px;
   cursor: default;
   outline: none;
   &::-moz-focus-inner {
@@ -73,26 +73,30 @@ const Arrow = styled.button`
   &:active {
     transform: scale(1.1, 1.1);
   }
+  @media (max-width: 240px) {
+    position: absolute;
+    left: 45%;
+  }
 `
 const Button = styled.div`
   background-color: #4caf50;
   border: solid 2px #4caf50;
   border-radius: 10px;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
-  width: 23px;
-  margin-right: 30px;
-  padding: 5px 16px;
+  width: 22px;
+  margin-right: 10px;
+  padding: 5px 8px;
   display: block;
   cursor: default;
 `
 const Input = styled.input`
   margin: 10px;
   padding-right: 10px;
-  width: 200px;
-  height: 35px;
-  font-size: 14px;
+  width: 140px;
+  height: 30px;
+  font-size: 12px;
   border: 2px solid #cccccc;
   border-radius: 10px;
   background-color: #ffffff;
@@ -105,16 +109,19 @@ const Input = styled.input`
   &:focus {
     border: 2px solid #808080;
   }
+  @media (max-width: 240px) {
+    width: 100px;
+    height: 25px;
+    font-size: 10px;
+  }
 `
 const Img = styled.img`
   display: block;
-  width: 50px;
-  height: 50px;
-  margin: 0;
-  padding: 0;
+  width: 34px;
+  height: 34px;
   pointer-events: none;
 `
-const Title = styled.h3`
+const Title = styled.h4`
   display: inline-block;
   margin: 10px;
 `
