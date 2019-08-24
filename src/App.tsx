@@ -1,26 +1,31 @@
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { connect } from 'react-redux'
+import Select from 'react-select'
 import { ThunkDispatch } from 'redux-thunk'
 import styled, { createGlobalStyle } from 'styled-components'
-import { actionCurrency } from './actions/enum'
 import getExchangeRate from './actions/getExchangeRate'
-import setBYN from './actions/setBYN'
-import setUSD from './actions/setUSD'
-import arrow from './arrow.png'
 import currency from './currency.jpg'
 import { AppState } from './reducers'
 import { Currency } from './reducers/interfaces'
 
 interface AppType {
-  USD_in: string
-  USD_out: string
+  BYN_EUR: string
+  BYN_RUB: string
+  BYN_USD: string
+  EUR_BYN: string
+  EUR_RUB: string
+  EUR_USD: string
+  RUB_BYN: string
+  RUB_EUR: string
+  RUB_USD: string
+  USD_BYN: string
+  USD_EUR: string
+  USD_RUB: string
   loading: boolean
   time: string
   error: string
   exchangeRate: () => (dispatch: ThunkDispatch<{}, {}, any>) => void
   mainCurrency: Currency
-  setMainBYN: () => { type: actionCurrency }
-  setMainUSD: () => { type: actionCurrency }
 }
 
 enum Placeholder {
@@ -34,6 +39,13 @@ enum Field {
 }
 
 const MS_IN_3_HOURS = 3 * 60 * 60 * 100
+
+const options = [
+  { value: 'USD', label: 'USD' },
+  { value: 'BYN', label: 'BYN' },
+  { value: 'RUB', label: 'RUB' },
+  { value: 'EUR', label: 'EUR' },
+]
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -52,44 +64,6 @@ const GlobalStyle = createGlobalStyle`
     height: 270px;
     padding: 15px;
   }
-`
-const Arrow = styled.button`
-  background-color: transparent;
-  border: solid 0px transparent;
-  border-radius: 50%;
-  padding: 1px;
-  display: block;
-  margin-top: 70px;
-  width: 35px;
-  height: 35px;
-  cursor: default;
-  outline: none;
-  &::-moz-focus-inner {
-    border: 0;
-  }
-  &:focus {
-    box-shadow: 0 0 3pt 2px #808080;
-  }
-  &:active {
-    transform: scale(1.1, 1.1);
-  }
-  @media (max-width: 240px) {
-    position: absolute;
-    left: 45%;
-  }
-`
-const Button = styled.div`
-  background-color: #4caf50;
-  border: solid 2px #4caf50;
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  width: 22px;
-  margin-right: 10px;
-  padding: 5px 8px;
-  display: block;
-  cursor: default;
 `
 const Input = styled.input`
   margin: 10px;
@@ -143,19 +117,37 @@ const Warning = styled.h3`
   text-align: center;
 `
 
-const App: FC<AppType> = ({
-  USD_in,
-  USD_out,
-  loading,
-  error,
-  time,
-  exchangeRate,
-  mainCurrency,
-  setMainBYN,
-  setMainUSD,
-}) => {
+const Sel = styled(Select)`
+  height: 30px;
+  width: 70px;
+  margin-bottom: 10px;
+  text-align: center;
+  & > div {
+    & > div {
+      &:last-child {
+        & > div {
+          padding: 2px;
+          svg {
+            color: #808080;
+            width: 15px;
+          }
+        }
+      }
+    }
+  }
+`
+
+interface SelectedOption {
+  value: string
+  label: string
+}
+
+const App: FC<AppType> = state => {
+  const { exchangeRate, error, loading, time } = state
   const [sellInput, setSellInput] = useState('')
   const [buyInput, setBuyInput] = useState('')
+  const [selectedOptionSell, setSelectedOptionSell] = useState(options[0])
+  const [selectedOptionBuy, setSelectedOptionBuy] = useState(options[1])
 
   useEffect(() => {
     exchangeRate()
@@ -170,9 +162,10 @@ const App: FC<AppType> = ({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     let result
+    const key = `${selectedOptionSell.value}_${selectedOptionBuy.value}` as keyof AppType
     const { value, name } = event.target
     getNewExchangeRate()
-    if (!value.length || !USD_in || !USD_out) {
+    if (!value.length || error) {
       setSellInput('')
       setBuyInput('')
       return
@@ -184,64 +177,45 @@ const App: FC<AppType> = ({
       return
     }
     if (name === Field.SELL) {
+      if (selectedOptionSell.label === selectedOptionBuy.label) {
+        setBuyInput(sellInput)
+        return
+      }
       if (/^0\d$/.test(value)) {
         setSellInput(value[1])
-        result =
-          mainCurrency === Currency.USD
-            ? parseFloat(USD_in) * parseFloat(value[1])
-            : parseFloat(value[1]) / parseFloat(USD_out)
+        result = parseFloat(state[key] as any) * parseFloat(value[1])
         setBuyInput((Math.round(result * 10000) / 10000).toString())
         return
       }
       setSellInput(value)
-      result =
-        mainCurrency === Currency.USD
-          ? parseFloat(USD_in) * parseFloat(value)
-          : parseFloat(value) / parseFloat(USD_out)
+      result = parseFloat(state[key] as any) * parseFloat(value)
       setBuyInput((Math.round(result * 10000) / 10000).toString())
       return
     }
     if (name === Field.BUY) {
+      if (selectedOptionSell.label === selectedOptionBuy.label) {
+        setSellInput(buyInput)
+        return
+      }
       if (/^0\d$/.test(value)) {
         setBuyInput(value[1])
-        result =
-          mainCurrency === Currency.BYN
-            ? parseFloat(value[1]) * parseFloat(USD_out)
-            : parseFloat(value[1]) / parseFloat(USD_in)
+        result = parseFloat(state[key] as any) * parseFloat(value)
         setSellInput((Math.round(result * 10000) / 10000).toString())
         return
       }
       setBuyInput(value)
-      result =
-        mainCurrency === Currency.BYN
-          ? parseFloat(value) * parseFloat(USD_out)
-          : parseFloat(value) / parseFloat(USD_in)
+      result = parseFloat(state[key] as any) * parseFloat(value)
       setSellInput((Math.round(result * 10000) / 10000).toString())
       return
     }
   }
 
-  const handleClick = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ): void => {
-    let result
-    getNewExchangeRate()
-    if (mainCurrency === Currency.USD) {
-      setMainBYN()
-      if (!sellInput) {
-        return
-      }
-      result = parseFloat(sellInput) / parseFloat(USD_out)
-      setBuyInput((Math.round(result * 10000) / 10000).toString())
-      return
-    }
-    setMainUSD()
-    if (!sellInput) {
-      return
-    }
-    result = parseFloat(USD_in) * parseFloat(sellInput)
-    setBuyInput((Math.round(result * 10000) / 10000).toString())
-    return
+  const handleSelectedOptionSell = (value: SelectedOption) => {
+    setSelectedOptionSell(value)
+  }
+
+  const handleSelectedOptionBuy = (value: SelectedOption) => {
+    setSelectedOptionBuy(value)
   }
 
   return (
@@ -259,10 +233,11 @@ const App: FC<AppType> = ({
           onChange={handleChange}
           disabled={loading || error.length !== 0}
         />
-        <Button>{mainCurrency}</Button>
-        <Arrow onClick={handleClick}>
-          <Img src={arrow} />
-        </Arrow>
+        <Sel
+          options={options}
+          value={selectedOptionSell}
+          onChange={handleSelectedOptionSell as any}
+        />
         <Input
           name={Field.BUY}
           value={buyInput}
@@ -270,23 +245,31 @@ const App: FC<AppType> = ({
           onChange={handleChange}
           disabled={loading || error.length !== 0}
         />
-        <Button>
-          {mainCurrency === Currency.USD ? Currency.BYN : Currency.USD}
-        </Button>
+        <Sel
+          options={options}
+          value={selectedOptionBuy}
+          onChange={handleSelectedOptionBuy as any}
+        />
       </WrapperDown>
-      {error.length !== 0 && USD_out.length !== 0 && USD_in.length !== 0 && (
-        <Warning>Данные устарели</Warning>
-      )}
-      {error.length !== 0 && (USD_out.length === 0 || USD_in.length === 0) && (
-        <Warning>Конвертер временно не работает</Warning>
-      )}
+      {error.length !== 0 && <Warning>Данные устарели</Warning>}
+      {error.length !== 0 && <Warning>Конвертер временно не работает</Warning>}
     </Fragment>
   )
 }
 
 const mapStateToProps = (state: AppState) => ({
-  USD_in: state.rate.USD_in,
-  USD_out: state.rate.USD_out,
+  BYN_EUR: state.rate.BYN_EUR,
+  BYN_RUB: state.rate.BYN_RUB,
+  BYN_USD: state.rate.BYN_USD,
+  EUR_BYN: state.rate.EUR_BYN,
+  EUR_RUB: state.rate.EUR_RUB,
+  EUR_USD: state.rate.EUR_USD,
+  RUB_BYN: state.rate.RUB_BYN,
+  RUB_EUR: state.rate.RUB_EUR,
+  RUB_USD: state.rate.RUB_USD,
+  USD_BYN: state.rate.USD_BYN,
+  USD_EUR: state.rate.USD_EUR,
+  USD_RUB: state.rate.USD_RUB,
   error: state.rate.error,
   loading: state.rate.loading,
   mainCurrency: state.currency.mainCurrency,
@@ -295,8 +278,6 @@ const mapStateToProps = (state: AppState) => ({
 
 const mapDispatchToProps = (dispatch: ThunkDispatch<{}, {}, any>) => ({
   exchangeRate: () => dispatch(getExchangeRate()),
-  setMainBYN: () => dispatch(setBYN()),
-  setMainUSD: () => dispatch(setUSD()),
 })
 
 export default connect(
