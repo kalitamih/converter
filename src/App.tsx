@@ -6,7 +6,6 @@ import styled, { createGlobalStyle } from 'styled-components'
 import getExchangeRate from './actions/getExchangeRate'
 import currency from './currency.jpg'
 import { AppState } from './reducers'
-import { Currency } from './reducers/interfaces'
 
 interface AppType {
   BYN_EUR: string
@@ -25,7 +24,6 @@ interface AppType {
   time: string
   error: string
   exchangeRate: () => (dispatch: ThunkDispatch<{}, {}, any>) => void
-  mainCurrency: Currency
 }
 
 enum Placeholder {
@@ -60,15 +58,15 @@ const GlobalStyle = createGlobalStyle`
   }
   #root {
     border: 2px solid black;
-    width: 270px;
-    height: 270px;
-    padding: 15px;
+    width: 240px;
+    height: 250px;
+    padding: 10px;
   }
 `
 const Input = styled.input`
   margin: 10px;
   padding-right: 10px;
-  width: 140px;
+  width: 130px;
   height: 30px;
   font-size: 12px;
   border: 2px solid #cccccc;
@@ -117,24 +115,29 @@ const Warning = styled.h3`
   text-align: center;
 `
 
-const Sel = styled(Select)`
-  height: 30px;
-  width: 70px;
-  margin-bottom: 10px;
+const SelectCurrency = styled(Select)`
+  height: 20px;
+  width: 60px;
+  margin-bottom: 23px;
+  font-size: 14px;
   text-align: center;
   & > div {
     & > div {
       &:last-child {
         & > div {
-          padding: 2px;
+          padding: 1px;
           svg {
             color: #808080;
-            width: 15px;
+            width: 12px;
           }
         }
       }
     }
   }
+`
+
+const Rate = styled.h3`
+  text-align: center;
 `
 
 interface SelectedOption {
@@ -149,12 +152,34 @@ const App: FC<AppType> = state => {
   const [selectedOptionSell, setSelectedOptionSell] = useState(options[0])
   const [selectedOptionBuy, setSelectedOptionBuy] = useState(options[1])
 
+  const timeFromUpdate = new Date().getTime() - parseFloat(time) > MS_IN_3_HOURS
+
+  const sellRate =
+    selectedOptionSell.label === selectedOptionBuy.label
+      ? '1.0000'
+      : state[
+          `${selectedOptionSell.value}_${selectedOptionBuy.value}` as keyof AppType
+        ]
+
+  const buyRate =
+    selectedOptionSell.label === selectedOptionBuy.label
+      ? '1.0000'
+      : (
+          Math.round(
+            (1 /
+              parseFloat(state[
+                `${selectedOptionBuy.value}_${selectedOptionSell.value}` as keyof AppType
+              ] as string)) *
+              10000
+          ) / 10000
+        ).toString()
+
   useEffect(() => {
     exchangeRate()
   }, [exchangeRate])
 
   const getNewExchangeRate = () => {
-    if (new Date().getTime() - parseFloat(time) > MS_IN_3_HOURS) {
+    if (timeFromUpdate) {
       exchangeRate()
     }
     return
@@ -176,11 +201,12 @@ const App: FC<AppType> = state => {
     if (value.length > 16) {
       return
     }
+    if (selectedOptionSell.label === selectedOptionBuy.label) {
+      setBuyInput(value)
+      setSellInput(value)
+      return
+    }
     if (name === Field.SELL) {
-      if (selectedOptionSell.label === selectedOptionBuy.label) {
-        setBuyInput(sellInput)
-        return
-      }
       if (/^0\d$/.test(value)) {
         setSellInput(value[1])
         result = parseFloat(state[key] as any) * parseFloat(value[1])
@@ -193,29 +219,51 @@ const App: FC<AppType> = state => {
       return
     }
     if (name === Field.BUY) {
-      if (selectedOptionSell.label === selectedOptionBuy.label) {
-        setSellInput(buyInput)
-        return
-      }
       if (/^0\d$/.test(value)) {
         setBuyInput(value[1])
-        result = parseFloat(state[key] as any) * parseFloat(value)
+        result = parseFloat(value[1]) / parseFloat(state[key] as any)
         setSellInput((Math.round(result * 10000) / 10000).toString())
         return
       }
       setBuyInput(value)
-      result = parseFloat(state[key] as any) * parseFloat(value)
+      result = parseFloat(value) / parseFloat(state[key] as any)
       setSellInput((Math.round(result * 10000) / 10000).toString())
       return
     }
   }
 
-  const handleSelectedOptionSell = (value: SelectedOption) => {
-    setSelectedOptionSell(value)
+  const handleSelectedOptionSell = (selected: SelectedOption) => {
+    setSelectedOptionSell(selected)
+    if (!sellInput || error) {
+      setSellInput('')
+      setBuyInput('')
+      return
+    }
+    if (selected.value === selectedOptionBuy.value) {
+      setBuyInput(sellInput)
+      return
+    }
+    const key = `${selected.value}_${selectedOptionBuy.value}` as keyof AppType
+    const result = parseFloat(state[key] as string) * parseFloat(sellInput)
+    setBuyInput((Math.round(result * 10000) / 10000).toString())
+    return
   }
 
-  const handleSelectedOptionBuy = (value: SelectedOption) => {
-    setSelectedOptionBuy(value)
+  const handleSelectedOptionBuy = (selected: SelectedOption) => {
+    setSelectedOptionBuy(selected)
+    if (!sellInput || error) {
+      setSellInput('')
+      setBuyInput('')
+      return
+    }
+    if (selectedOptionSell.label === selected.value) {
+      setBuyInput(sellInput)
+      return
+    }
+    const key = `${selectedOptionSell.value}_${selected.value}` as keyof AppType
+    const result = parseFloat(state[key] as string) * parseFloat(sellInput)
+    setBuyInput((Math.round(result * 10000) / 10000).toString())
+    return
   }
 
   return (
@@ -233,10 +281,11 @@ const App: FC<AppType> = state => {
           onChange={handleChange}
           disabled={loading || error.length !== 0}
         />
-        <Sel
+        <SelectCurrency
           options={options}
           value={selectedOptionSell}
           onChange={handleSelectedOptionSell as any}
+          disabled={loading || error.length !== 0}
         />
         <Input
           name={Field.BUY}
@@ -245,14 +294,24 @@ const App: FC<AppType> = state => {
           onChange={handleChange}
           disabled={loading || error.length !== 0}
         />
-        <Sel
+        <SelectCurrency
           options={options}
           value={selectedOptionBuy}
           onChange={handleSelectedOptionBuy as any}
+          disabled={loading || error.length !== 0}
         />
       </WrapperDown>
-      {error.length !== 0 && <Warning>Данные устарели</Warning>}
-      {error.length !== 0 && <Warning>Конвертер временно не работает</Warning>}
+      {error.length === 0 && (
+        <Rate>
+          {sellRate}/{buyRate}
+        </Rate>
+      )}
+      {error.length !== 0 && timeFromUpdate && (
+        <Warning>Данные устарели</Warning>
+      )}
+      {error.length !== 0 && !timeFromUpdate && (
+        <Warning>Конвертер временно не работает</Warning>
+      )}
     </Fragment>
   )
 }
@@ -272,7 +331,6 @@ const mapStateToProps = (state: AppState) => ({
   USD_RUB: state.rate.USD_RUB,
   error: state.rate.error,
   loading: state.rate.loading,
-  mainCurrency: state.currency.mainCurrency,
   time: state.rate.time,
 })
 

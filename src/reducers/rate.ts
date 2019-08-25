@@ -59,7 +59,7 @@ export const rateReducer = (state = initialState, action: ActionRate) => {
         RUB_USD: action.RUB_USD,
         USD_BYN: action.USD_BYN,
         USD_EUR: action.USD_EUR,
-        USD_RUB: action.USD_EUR,
+        USD_RUB: action.USD_RUB,
         loading: false,
         time: action.time,
       }
